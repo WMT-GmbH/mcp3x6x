@@ -1,0 +1,398 @@
+use crate::RegisterAddress;
+use modular_bitfield::prelude::*;
+
+/// ADC Operating mode, Master Clock mode and Input Bias Current Source mode
+#[bitfield]
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+pub struct Config0 {
+    /// ADC Operating Mode Selection
+    pub adc_mode: AdcMode,
+    /// Current Source/Sink Selection Bits for Sensor Bias (source on VIN+/sink on VIN-
+    pub cs_sel: CsSel,
+    /// Clock Selection
+    pub clk_sel: ClkSel,
+    #[skip]
+    __: B2,
+}
+
+/// Clock Selection
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 2]
+pub enum ClkSel {
+    /// Internal clock is selected and AMCLK is present on the analog master clock output pin
+    InternalClockAndAMCLK = 0b11,
+    /// Internal clock is selected and no clock output is present on the CLK pin
+    InternalClock = 0b10,
+    /// External digital clock (default)
+    ExternalDigitalClock = 0b00,
+}
+
+/// Current Source/Sink Selection Bits for Sensor Bias (source on VIN+/sink on VIN-
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 2]
+pub enum CsSel {
+    /// 15 µA is applied to the ADC inputs
+    Cs15uA = 0b11,
+    /// 3.7 µA is applied to the ADC inputs
+    Cs3_7uA = 0b10,
+    /// 0.9 µA is applied to the ADC inputs
+    Cs0_9uA = 0b01,
+    /// No current source is applied to the ADC inputs (default)
+    CsOff = 0b00,
+}
+
+/// ADC Operating Mode Selection
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 2]
+pub enum AdcMode {
+    /// 11 = ADC Conversion mode
+    Conversion = 0b11,
+    /// 10 = ADC Standby mode
+    Standby = 0b10,
+    /// 00 = ADC Shutdown mode (default)
+    ShutdownDefault = 0b00,
+}
+
+/// Prescale and OSR settings
+#[bitfield]
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+pub struct Config1 {
+    #[skip]
+    __: B2,
+    /// Oversampling Ratio for Delta-Sigma A/D Conversion
+    pub osr: Osr,
+    /// Prescaler Value Selection for AMCLK
+    pub pre: Pre,
+}
+
+/// Prescaler Value Selection for AMCLK
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 2]
+pub enum Pre {
+    /// AMCLK = MCLK/8
+    MclkDiv8 = 0b11,
+    /// AMCLK = MCLK/4
+    MclkDiv4 = 0b10,
+    /// AMCLK = MCLK/2
+    MclkDiv2 = 0b01,
+    /// AMCLK = MCLK (default)
+    Mclk = 0b00,
+}
+
+/// Oversampling Ratio for Delta-Sigma A/D Conversion
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 4]
+pub enum Osr {
+    /// OSR: 98304
+    Osr98304 = 0b1111,
+    /// OSR: 81920
+    Osr81920 = 0b1110,
+    /// OSR: 49152
+    Osr49152 = 0b1101,
+    /// OSR: 40960
+    Osr40960 = 0b1100,
+    /// OSR: 24576
+    Osr24576 = 0b1011,
+    /// OSR: 20480
+    Osr20480 = 0b1010,
+    /// OSR: 16384
+    Osr16384 = 0b1001,
+    /// OSR: 8192
+    Osr8192 = 0b1000,
+    /// OSR: 4096
+    Osr4096 = 0b0111,
+    /// OSR: 2048
+    Osr2048 = 0b0110,
+    /// OSR: 1024
+    Osr1024 = 0b0101,
+    /// OSR: 512
+    Osr512 = 0b0100,
+    /// OSR: 256 (default)
+    Osr256 = 0b0011,
+    /// OSR: 128
+    Osr128 = 0b0010,
+    /// OSR: 64
+    Osr64 = 0b0001,
+    /// OSR: 32
+    Osr32 = 0b0000,
+}
+
+///  ADC boost and gain settings, auto-zeroing settings for analog
+/// multiplexer, voltage reference and ADC
+#[bitfield]
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+pub struct Config2 {
+    #[skip]
+    __: B2,
+    /// Auto-Zeroing MUX Setting
+    pub az_mux: bool,
+    /// ADC Gain Selection
+    pub gain: Gain,
+    /// ADC Bias Current Selection
+    pub boost: Boost,
+}
+
+/// ADC Bias Current Selection
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 2]
+pub enum Boost {
+    /// ADC channel has current ×2
+    X2 = 0b11,
+    /// ADC channel has current ×1 (default)
+    X1 = 0b10,
+    /// ADC channel has current ×0.66
+    X0_66 = 0b01,
+    /// ADC channel has current ×0.5
+    X0_5 = 0b00,
+}
+
+/// ADC Gain Selection
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 3]
+pub enum Gain {
+    /// Gain ×64 (×16 analog, ×4 digital)
+    X64 = 0b111,
+    /// Gain ×32 (×16 analog, ×2 digital)
+    X32 = 0b110,
+    /// Gain ×16
+    X16 = 0b101,
+    /// Gain ×8
+    X8 = 0b100,
+    /// Gain ×4
+    X4 = 0b011,
+    /// Gain ×2
+    X2 = 0b010,
+    /// Gain ×1 (default)
+    X1 = 0b001,
+    /// Gain ×1/3
+    Div3 = 0b000,
+}
+
+impl Gain {
+    /// Get the amplification factor as a `f32`
+    pub const fn amplification(self) -> f32 {
+        match self {
+            Gain::X64 => 64.0,
+            Gain::X32 => 32.0,
+            Gain::X16 => 16.0,
+            Gain::X8 => 8.0,
+            Gain::X4 => 4.0,
+            Gain::X2 => 2.0,
+            Gain::X1 => 1.0,
+            Gain::Div3 => 1.0 / 3.0,
+        }
+    }
+}
+
+/// Conversion mode, data and CRC format settings; enable for CRC on
+/// communications, enable for digital offset and gain error calibrations
+#[bitfield]
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+pub struct Config3 {
+    /// Enable Digital Gain Calibration (default = false)
+    pub en_gaincal: bool,
+    /// Enable Digital Offset Calibration (default = false)
+    pub en_offcal: bool,
+    /// CRC Checksum Selection on Read Communications (default = false)
+    pub en_crccom: bool,
+    /// CRC Checksum Format Selection on Read Communications
+    pub crc_format: CrcFormat,
+    /// ADC Output Data Format Selection
+    pub data_format: DataFormat,
+    /// Conversion Mode Selection
+    pub conv_mode: ConvMode,
+}
+
+/// CRC Checksum Format Selection on Read Communications
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 1]
+pub enum CrcFormat {
+    /// 32-bit wide (CRC-16 followed by 16 zeros)
+    Wide32 = 1,
+    /// 16-bit wide (CRC-16 only) (default)
+    Wide16 = 0,
+}
+
+/// Conversion Mode Selection
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 2]
+pub enum ConvMode {
+    /// Continuous Conversion mode or continuous conversion cycle in SCAN mode
+    Continuous = 0b11,
+    /// One-shot conversion or one-shot cycle in SCAN mode. It sets ADC_MODE[1:0] to ‘10’ (standby) at
+    /// the end of the conversion or at the end of the conversion cycle in SCAN mode.
+    OneShotStandby = 0b10,
+    /// One-shot conversion or one-shot cycle in SCAN mode. It sets ADC_MODE[1:0] to ‘0x’ (ADC
+    /// Shutdown) at the end of the conversion or at the end of the conversion cycle in SCAN mode (default).
+    OneShotShutdown = 0b00,
+}
+
+/// ADC Output Data Format Selection
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 2]
+pub enum DataFormat {
+    /// 32-bit (25-bit right justified data + Channel ID): CHID[3:0] + SGN extension (4 bits) + 24-bit ADC
+    /// data. It allows overrange with the SGN extension.
+    Format32ChId = 0b11,
+    ///  32-bit (25-bit right justified data): SGN extension (8-bit) + 24-bit ADC data. It allows overrange with
+    /// the SGN extension.
+    Format32SgnExt = 0b10,
+    /// 32-bit (24-bit left justified data): 24-bit ADC data + 0x00 (8-bit). It does not allow overrange (ADC
+    /// code locked to 0xFFFFFF or 0x800000).
+    Format32Left = 0b01,
+    /// 24-bit (default ADC coding): 24-bit ADC data. It does not allow overrange (ADC code locked to
+    /// 0xFFFFFF or 0x800000).
+    Format24Default = 0b00,
+}
+
+/// IRQ Status bits and IRQ mode settings; enable for Fast commands and
+/// for conversion start pulse
+#[bitfield]
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+pub struct Irq {
+    /// Enable Conversion Start Interrupt Output
+    pub en_stp: bool,
+    /// Enable Fast Commands
+    pub en_fastcmd: bool,
+    /// IRQ Pin Inactive State Selection
+    /// true: The Inactive state is logic high (does not require a pull-up resistor to DVDD)
+    /// false: The Inactive state is high-Z (requires a pull-up resistor to DVDD) (default)
+    pub push_pull: bool,
+    /// IRQ/MDAT Selection
+    /// true: MDAT output is selected. Only POR and CRC interrupts can be present on this pin and take priority over the MDAT output.
+    /// false: IRQ output is selected. All interrupts can appear on the IRQ/MDAT pin. (default)
+    pub mdat: bool,
+    #[skip(setters)]
+    /// Power-On Reset Status Flag
+    pub por_status: bool,
+    #[skip(setters)]
+    /// CRC Error Status Flag for Configuration Registers
+    pub crccfg_status: bool,
+    #[skip(setters)]
+    /// Data Ready Status Flag
+    pub dr_status: bool,
+    #[skip]
+    __: B1,
+}
+
+/// Analog multiplexer input selection (MUX mode only)
+#[bitfield]
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+pub struct Mux {
+    /// MUX_VIN- Input Selection (default = CH1)
+    pub vin_n: MuxInput,
+    /// MUX_VIN+ Input Selection (default = CH1)
+    pub vin_p: MuxInput,
+}
+
+/// MUX_VIN Input Selection
+#[derive(Specifier, Copy, Clone, Debug)]
+#[bits = 4]
+pub enum MuxInput {
+    /// CH0
+    Ch0 = 0b0000,
+    /// CH1
+    Ch1 = 0b0001,
+    /// CH2
+    // only MCP3562/4
+    Ch2 = 0b0010,
+    /// CH3
+    // only MCP3562/4
+    Ch3 = 0b0011,
+    /// CH4
+    // only MCP3564
+    Ch4 = 0b0100,
+    /// CH5
+    // only MCP3564
+    Ch5 = 0b0101,
+    /// CH6
+    // only MCP3564
+    Ch6 = 0b0110,
+    /// CH7
+    // only MCP3564
+    Ch7 = 0b0111,
+    /// AGND
+    Agnd = 0b1000,
+    /// AVDD
+    Avdd = 0b1001,
+    /// REFIN–
+    Refn = 0b1100,
+    /// REFIN+
+    Refp = 0b1011,
+    /// Internal Temperature Sensor Diode P (Temp Diode P)
+    TempP = 0b1101,
+    /// Internal Temperature Sensor Diode M (Temp Diode M)
+    TempM = 0b1110,
+    /// Internal VCM
+    Vcm = 0b1111,
+}
+
+/// Internal Registers with 8 bits of data
+#[derive(Copy, Clone, Debug)]
+#[repr(u8)]
+pub enum Register8Bit {
+    /// [`Config0`]
+    Config0(Config0) = RegisterAddress::CONFIG0 as u8,
+    /// [`Config1`]
+    Config1(Config1) = RegisterAddress::CONFIG1 as u8,
+    /// [`Config2`]
+    Config2(Config2) = RegisterAddress::CONFIG2 as u8,
+    /// [`Config3`]
+    Config3(Config3) = RegisterAddress::CONFIG3 as u8,
+    /// [`Irq`]
+    Irq(Irq) = RegisterAddress::IRQ as u8,
+    /// [`Mux`]
+    Mux(Mux) = RegisterAddress::MUX as u8,
+}
+
+impl Register8Bit {
+    pub(super) fn addr_value(self) -> (RegisterAddress, u8) {
+        match self {
+            Register8Bit::Config0(data) => (RegisterAddress::CONFIG0, data.value()),
+            Register8Bit::Config1(data) => (RegisterAddress::CONFIG1, data.value()),
+            Register8Bit::Config2(data) => (RegisterAddress::CONFIG2, data.value()),
+            Register8Bit::Config3(data) => (RegisterAddress::CONFIG3, data.value()),
+            Register8Bit::Irq(data) => (RegisterAddress::IRQ, data.value()),
+            Register8Bit::Mux(data) => (RegisterAddress::MUX, data.value()),
+        }
+    }
+}
+macro_rules! impl_register {
+    (
+        $(
+            $ty:ty => $variant:ident
+        ),* $(,)?
+    ) => {
+        $(
+            impl From<$ty> for Register8Bit {
+                #[inline]
+                fn from(value: $ty) -> Self {
+                    Register8Bit::$variant(value)
+                }
+            }
+
+            impl $ty {
+                /// Register value
+                #[inline]
+                pub fn value(self) -> u8 {
+                    self.bytes[0]
+                }
+            }
+        )*
+    };
+}
+
+impl_register!(
+    Config0 => Config0,
+    Config1 => Config1,
+    Config2 => Config2,
+    Config3 => Config3,
+    Irq     => Irq,
+    Mux     => Mux,
+);
