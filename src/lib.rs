@@ -24,6 +24,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
         }
     }
 
+    /// TODO add docs
     pub fn init(&mut self) -> Result<(), SPI::Error> {
         // use internal clock
         let config0 = Config0::new().with_clk_sel(ClkSel::InternalClock);
