@@ -10,7 +10,7 @@ pub struct Config0 {
     /// Clock Selection
     #[bits(2)]
     pub clk_sel: ClkSel,
-    /// Current Source/Sink Selection Bits for Sensor Bias (source on VIN+/sink on VIN-
+    /// Current Source/Sink Selection Bits for Sensor Bias (source on VIN+/sink on VIN-)
     #[bits(2)]
     pub cs_sel: CsSel,
     /// ADC Operating Mode Selection
