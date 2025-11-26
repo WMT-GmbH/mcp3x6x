@@ -433,7 +433,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_bit_order(){
+    fn test_bit_order() {
         let mux = Mux::new().with_vin_n(MuxInput::Ch1);
         assert_eq!(mux.into_bits(), 0b0000_0001);
     }

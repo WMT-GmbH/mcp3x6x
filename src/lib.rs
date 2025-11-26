@@ -9,12 +9,14 @@ pub use regs::*;
 /// It's possible to order devices with other two-bit addresses, but this is the default one.
 const SPI_DEVICE_ADDRESS: u8 = 0x01 << 6;
 
-pub struct MCP356x<SPI> {
+/// 16bit MCP3461/MCP3462/MCP3464/ or 24bit MCP3561/MCP3562/MCP3564/ Analog Digital Converter
+pub struct MCP3x6x<SPI> {
     spi: SPI,
     status_byte: StatusByte,
 }
 
-impl<SPI: embedded_hal::spi::SpiDevice> MCP356x<SPI> {
+impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
+    /// Creat the driver
     pub fn new(spi: SPI) -> Self {
         Self {
             spi,
@@ -40,6 +42,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP356x<SPI> {
         self.status_byte
     }
 
+    /// Send a [`FastCommand`]
     pub fn fast_command(&mut self, cmd: FastCommand) -> Result<StatusByte, SPI::Error> {
         let mut buf = [cmd.into_command_byte()];
         self.spi.transfer_in_place(&mut buf)?;
@@ -47,8 +50,14 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP356x<SPI> {
         Ok(self.status_byte)
     }
 
+    /// Read a conversion result if [`DataFormat::Format24Default`] is configured
     pub fn read_24_bit_adc_data(&mut self) -> Result<i32, SPI::Error> {
-        let mut buf = [RegisterAddress::ADCDATA.into_single_read(), 0x00, 0x00, 0x00];
+        let mut buf = [
+            RegisterAddress::ADCDATA.into_single_read(),
+            0x00,
+            0x00,
+            0x00,
+        ];
         self.spi.transfer_in_place(&mut buf)?;
         let mut value = (buf[1] as i32) << 16 | (buf[2] as i32) << 8 | buf[3] as i32;
         if value & 0x0080_0000 != 0 {
@@ -57,12 +66,14 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP356x<SPI> {
         Ok(value)
     }
 
+    /// Read a conversion result if [`DataFormat::Format16Default`] is configured
     pub fn read_16_bit_adc_data(&mut self) -> Result<i16, SPI::Error> {
         let mut buf = [RegisterAddress::ADCDATA.into_single_read(), 0x00, 0x00];
         self.spi.transfer_in_place(&mut buf)?;
         Ok(i16::from_be_bytes([buf[1], buf[2]]))
     }
 
+    /// Write a 8bit wide register
     pub fn write_register_8bit(&mut self, reg: impl Into<Register8Bit>) -> Result<(), SPI::Error> {
         self._write_register_8bit(reg.into())
     }
@@ -74,6 +85,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP356x<SPI> {
         Ok(())
     }
 
+    /// Read a 8bit wide register
     pub fn read_register_8bit(&mut self, reg: RegisterAddress) -> Result<u8, SPI::Error> {
         let mut buf = [reg.into_single_read(), 0x00];
         self.spi.transfer_in_place(&mut buf)?;
@@ -118,6 +130,7 @@ impl ToVoltageConverter16bit {
     }
 }
 
+/// Fast command
 #[repr(u8)]
 pub enum FastCommand {
     /// ADC Conversion Start/Restart Fast Command (overwrites ADC_MODE[1:0] = 11)
@@ -145,7 +158,6 @@ impl FastCommand {
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct StatusByte(pub u8);
 
-
 impl StatusByte {
     /// ADC data ready interrupt status
     pub fn dr_status(self) -> bool {
@@ -161,8 +173,9 @@ impl StatusByte {
     }
 }
 
+/// Available registers
 #[repr(u8)]
-enum RegisterAddress {
+pub enum RegisterAddress {
     ///  4/24/32 R Latest A/D conversion data output value (24 or 32 bits depending on
     /// DATA_FORMAT[1:0]) or modulator output stream (4-bit wide) in MDAT
     /// Output mode
@@ -202,6 +215,7 @@ impl RegisterAddress {
         SPI_DEVICE_ADDRESS | self as u8 | 0b01
     }
 
+    #[allow(unused)]
     fn into_incremental_read(self) -> u8 {
         SPI_DEVICE_ADDRESS | self as u8 | 0b11
     }
