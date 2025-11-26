@@ -2,7 +2,8 @@ use crate::RegisterAddress;
 use bitfield_struct::{bitenum, bitfield};
 
 /// ADC Operating mode, Master Clock mode and Input Bias Current Source mode
-#[bitfield(u8, order = Msb)]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
+#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
 pub struct Config0 {
     #[bits(2)]
     __: u8,
@@ -21,6 +22,7 @@ pub struct Config0 {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ClkSel {
     /// Internal clock is selected and AMCLK is present on the analog master clock output pin
     InternalClockAndAMCLK = 0b11,
@@ -35,6 +37,7 @@ pub enum ClkSel {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CsSel {
     /// 15 µA is applied to the ADC inputs
     Cs15uA = 0b11,
@@ -51,6 +54,7 @@ pub enum CsSel {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum AdcMode {
     /// 11 = ADC Conversion mode
     Conversion = 0b11,
@@ -62,7 +66,8 @@ pub enum AdcMode {
 }
 
 /// Prescale and OSR settings
-#[bitfield(u8, order = Msb)]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
+#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
 pub struct Config1 {
     /// Prescaler Value Selection for AMCLK
     #[bits(2)]
@@ -78,6 +83,7 @@ pub struct Config1 {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Pre {
     /// AMCLK = MCLK/8
     MclkDiv8 = 0b11,
@@ -94,6 +100,7 @@ pub enum Pre {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Osr {
     /// OSR: 98304
     Osr98304 = 0b1111,
@@ -132,7 +139,8 @@ pub enum Osr {
 
 ///  ADC boost and gain settings, auto-zeroing settings for analog
 /// multiplexer, voltage reference and ADC
-#[bitfield(u8, order = Msb)]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
+#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
 pub struct Config2 {
     /// ADC Bias Current Selection
     #[bits(2)]
@@ -150,6 +158,7 @@ pub struct Config2 {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Boost {
     /// ADC channel has current ×2
     X2 = 0b11,
@@ -166,6 +175,7 @@ pub enum Boost {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Gain {
     /// Gain ×64 (×16 analog, ×4 digital)
     X64 = 0b111,
@@ -204,7 +214,8 @@ impl Gain {
 
 /// Conversion mode, data and CRC format settings; enable for CRC on
 /// communications, enable for digital offset and gain error calibrations
-#[bitfield(u8, order = Msb)]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
+#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
 pub struct Config3 {
     /// Conversion Mode Selection
     #[bits(2)]
@@ -227,6 +238,7 @@ pub struct Config3 {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CrcFormat {
     /// 32-bit wide (CRC-16 followed by 16 zeros)
     Wide32 = 1,
@@ -239,6 +251,7 @@ pub enum CrcFormat {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ConvMode {
     /// Continuous Conversion mode or continuous conversion cycle in SCAN mode
     Continuous = 0b11,
@@ -255,6 +268,7 @@ pub enum ConvMode {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DataFormat {
     /// 32-bit (25-bit right justified data + Channel ID): CHID[3:0] + SGN extension (4 bits) + 24-bit ADC
     /// data. It allows overrange with the SGN extension.
@@ -273,7 +287,8 @@ pub enum DataFormat {
 
 /// IRQ Status bits and IRQ mode settings; enable for Fast commands and
 /// for conversion start pulse
-#[bitfield(u8, order = Msb)]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
+#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
 pub struct Irq {
     #[bits(1)]
     __: u8,
@@ -301,7 +316,8 @@ pub struct Irq {
 }
 
 /// Analog multiplexer input selection (MUX mode only)
-#[bitfield(u8, order = Msb)]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
+#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
 pub struct Mux {
     /// MUX_VIN+ Input Selection (default = CH1)
     #[bits(4)]
@@ -315,6 +331,7 @@ pub struct Mux {
 #[bitenum]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum MuxInput {
     /// CH0
     #[fallback]
