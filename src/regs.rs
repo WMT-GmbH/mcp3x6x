@@ -354,6 +354,72 @@ pub enum MuxInput {
     Vcm = 0b1111,
 }
 
+/// SCAN mode settings
+#[bitfield]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct Scan {
+    #[skip]
+    __: B5,
+    /// Delay Time (TDLY_SCAN) Between Each Conversion During a SCAN Cycle
+    pub dly: Dly,
+    /// Differential Channel A (CH0–CH1)
+    pub diff_a: bool,
+    /// Differential Channel B (CH2–CH3)
+    pub diff_b: bool,
+    /// Differential Channel C (CH4–CH5)
+    pub diff_c: bool,
+    /// Differential Channel D (CH6–CH7)
+    pub diff_d: bool,
+    /// Temperature Reading (TEMP)
+    pub temp: bool,
+    /// Analog Supply Voltage Reading (AVDD)
+    pub avdd: bool,
+    /// VCM Reading (VCM)
+    pub vcm: bool,
+    /// Offset Reading (OFFSET)
+    pub offset: bool,
+    /// Single-Ended Channel CH0
+    pub se_ch0: bool,
+    /// Single-Ended Channel CH1
+    pub se_ch1: bool,
+    /// Single-Ended Channel CH2
+    pub se_ch2: bool,
+    /// Single-Ended Channel CH3
+    pub se_ch3: bool,
+    /// Single-Ended Channel CH4
+    pub se_ch4: bool,
+    /// Single-Ended Channel CH5
+    pub se_ch5: bool,
+    /// Single-Ended Channel CH6
+    pub se_ch6: bool,
+    /// Single-Ended Channel CH7
+    pub se_ch7: bool,
+}
+
+/// Delay Time Between Each Conversion During SCAN Cycle (DLY[2:0])
+#[derive(Specifier, Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[bits = 3]
+pub enum Dly {
+    /// 512 * DMCLK
+    D512 = 0b111,
+    /// 256 * DMCLK
+    D256 = 0b110,
+    /// 128 * DMCLK
+    D128 = 0b101,
+    /// 64 * DMCLK
+    D64 = 0b100,
+    /// 32 * DMCLK
+    D32 = 0b011,
+    /// 16 * DMCLK
+    D16 = 0b010,
+    /// 8 * DMCLK
+    D8 = 0b001,
+    /// 0: No delay (default)
+    D0 = 0b000,
+}
+
 /// Internal Registers with 8 bits of data
 #[derive(Copy, Clone, Debug)]
 #[repr(u8)]
@@ -426,5 +492,8 @@ mod tests {
     fn test_bit_order() {
         let mux = Mux::new().with_vin_n(MuxInput::Ch1);
         assert_eq!(mux.value(), 0b0000_0001);
+
+        let scan = Scan::new().with_offset(true).with_dly(Dly::D8);
+        assert_eq!(scan.bytes, [0b0010_0000, 0b1000_0000, 0b0000_0000]);
     }
 }
