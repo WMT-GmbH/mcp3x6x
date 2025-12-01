@@ -311,32 +311,22 @@ pub enum MuxInput {
     /// CH1
     Ch1 = 0b0001,
     /// CH2
-    #[cfg(any(
-        feature = "mcp3464",
-        feature = "mcp3564",
-        feature = "mcp3462",
-        feature = "mcp3562"
-    ))]
+    #[cfg(feature = "__has_ch2_ch3")]
     Ch2 = 0b0010,
     /// CH3
-    #[cfg(any(
-        feature = "mcp3464",
-        feature = "mcp3564",
-        feature = "mcp3462",
-        feature = "mcp3562"
-    ))]
+    #[cfg(feature = "__has_ch2_ch3")]
     Ch3 = 0b0011,
     /// CH4
-    #[cfg(any(feature = "mcp3464", feature = "mcp3564"))]
+    #[cfg(feature = "__has_ch4_ch5_ch6_ch7")]
     Ch4 = 0b0100,
     /// CH5
-    #[cfg(any(feature = "mcp3464", feature = "mcp3564"))]
+    #[cfg(feature = "__has_ch4_ch5_ch6_ch7")]
     Ch5 = 0b0101,
     /// CH6
-    #[cfg(any(feature = "mcp3464", feature = "mcp3564"))]
+    #[cfg(feature = "__has_ch4_ch5_ch6_ch7")]
     Ch6 = 0b0110,
     /// CH7
-    #[cfg(any(feature = "mcp3464", feature = "mcp3564"))]
+    #[cfg(feature = "__has_ch4_ch5_ch6_ch7")]
     Ch7 = 0b0111,
     /// AGND
     Agnd = 0b1000,
@@ -354,6 +344,79 @@ pub enum MuxInput {
     Vcm = 0b1111,
 }
 
+/// SCAN mode settings
+#[cfg(not(feature = "__has_ch2_ch3"))]
+#[bitfield]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct Scan {
+    #[skip]
+    __: B5,
+    /// Delay Time (TDLY_SCAN) Between Each Conversion During a SCAN Cycle
+    pub dly: Dly,
+    /// Differential Channel A (CH0–CH1)
+    pub diff_a: bool,
+    /// Differential Channel B (CH2–CH3)
+    pub diff_b: bool,
+    /// Differential Channel C (CH4–CH5)
+    pub diff_c: bool,
+    /// Differential Channel D (CH6–CH7)
+    pub diff_d: bool,
+    /// Temperature Reading (TEMP)
+    pub temp: bool,
+    /// Analog Supply Voltage Reading (AVDD)
+    pub avdd: bool,
+    /// VCM Reading (VCM)
+    pub vcm: bool,
+    /// Offset Reading (OFFSET)
+    pub offset: bool,
+    /// Single-Ended Channel CH0
+    pub se_ch0: bool,
+    /// Single-Ended Channel CH1
+    pub se_ch1: bool,
+    #[skip]
+    __: B6,
+}
+
+#[cfg(all(feature = "__has_ch2_ch3", not(feature = "__has_ch4_ch5_ch6_ch7")))]
+/// SCAN mode settings
+#[bitfield]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct Scan {
+    #[skip]
+    __: B5,
+    /// Delay Time (TDLY_SCAN) Between Each Conversion During a SCAN Cycle
+    pub dly: Dly,
+    /// Differential Channel A (CH0–CH1)
+    pub diff_a: bool,
+    /// Differential Channel B (CH2–CH3)
+    pub diff_b: bool,
+    /// Differential Channel C (CH4–CH5)
+    pub diff_c: bool,
+    /// Differential Channel D (CH6–CH7)
+    pub diff_d: bool,
+    /// Temperature Reading (TEMP)
+    pub temp: bool,
+    /// Analog Supply Voltage Reading (AVDD)
+    pub avdd: bool,
+    /// VCM Reading (VCM)
+    pub vcm: bool,
+    /// Offset Reading (OFFSET)
+    pub offset: bool,
+    /// Single-Ended Channel CH0
+    pub se_ch0: bool,
+    /// Single-Ended Channel CH1
+    pub se_ch1: bool,
+    /// Single-Ended Channel CH2
+    pub se_ch2: bool,
+    /// Single-Ended Channel CH3
+    pub se_ch3: bool,
+    #[skip]
+    __: B4,
+}
+
+#[cfg(feature = "__has_ch4_ch5_ch6_ch7")]
 /// SCAN mode settings
 #[bitfield]
 #[derive(Copy, Clone, Debug)]
