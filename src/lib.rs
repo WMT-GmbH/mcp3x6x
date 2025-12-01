@@ -51,6 +51,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
         Ok(self.status_byte)
     }
 
+    #[cfg(any(feature = "mcp3561", feature = "mcp3562", feature = "mcp3564"))]
     /// Read a conversion result if [`DataFormat::Format24Default`] is configured
     pub fn read_24_bit_adc_data(&mut self) -> Result<i32, SPI::Error> {
         let mut buf = [
@@ -67,6 +68,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
         Ok(value)
     }
 
+    #[cfg(any(feature = "mcp3461", feature = "mcp3462", feature = "mcp3464"))]
     /// Read a conversion result if [`DataFormat::Format16Default`] is configured
     pub fn read_16_bit_adc_data(&mut self) -> Result<i16, SPI::Error> {
         let mut buf = [RegisterAddress::ADCDATA.into_single_read(), 0x00, 0x00];
@@ -75,6 +77,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
     }
 
     /// Write a 8bit wide register
+    #[inline(always)]
     pub fn write_register_8bit(&mut self, reg: impl Into<Register8Bit>) -> Result<(), SPI::Error> {
         self._write_register_8bit(reg.into())
     }

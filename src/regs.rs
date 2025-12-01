@@ -339,22 +339,22 @@ pub enum MuxInput {
     /// CH1
     Ch1 = 0b0001,
     /// CH2
-    // only MCP3562/4
+    #[cfg(any(feature = "mcp3464", feature = "mcp3564", feature = "mcp3462", feature = "mcp3562"))]
     Ch2 = 0b0010,
     /// CH3
-    // only MCP3562/4
+    #[cfg(any(feature = "mcp3464", feature = "mcp3564", feature = "mcp3462", feature = "mcp3562"))]
     Ch3 = 0b0011,
     /// CH4
-    // only MCP3564
+    #[cfg(any(feature = "mcp3464", feature = "mcp3564"))]
     Ch4 = 0b0100,
     /// CH5
-    // only MCP3564
+    #[cfg(any(feature = "mcp3464", feature = "mcp3564"))]
     Ch5 = 0b0101,
     /// CH6
-    // only MCP3564
+    #[cfg(any(feature = "mcp3464", feature = "mcp3564"))]
     Ch6 = 0b0110,
     /// CH7
-    // only MCP3564
+    #[cfg(any(feature = "mcp3464", feature = "mcp3564"))]
     Ch7 = 0b0111,
     /// AGND
     Agnd = 0b1000,

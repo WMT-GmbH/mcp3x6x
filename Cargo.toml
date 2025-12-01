@@ -10,3 +10,9 @@ defmt = { version = "1.0.1", optional = true }
 
 [features]
 defmt = ["dep:defmt"]
+mcp3461 = []
+mcp3462 = []
+mcp3464 = []
+mcp3561 = []
+mcp3562 = []
+mcp3564 = []
