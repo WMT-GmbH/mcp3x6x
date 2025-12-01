@@ -2,20 +2,20 @@ use crate::RegisterAddress;
 use bitfield_struct::{bitenum, bitfield};
 
 /// ADC Operating mode, Master Clock mode and Input Bias Current Source mode
-#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
-#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8))]
+#[cfg_attr(feature = "defmt", bitfield(u8, defmt=true))]
 pub struct Config0 {
-    #[bits(2)]
-    __: u8,
-    /// Clock Selection
-    #[bits(2)]
-    pub clk_sel: ClkSel,
-    /// Current Source/Sink Selection Bits for Sensor Bias (source on VIN+/sink on VIN-)
-    #[bits(2)]
-    pub cs_sel: CsSel,
     /// ADC Operating Mode Selection
     #[bits(2)]
     pub adc_mode: AdcMode,
+    /// Current Source/Sink Selection Bits for Sensor Bias (source on VIN+/sink on VIN-)
+    #[bits(2)]
+    pub cs_sel: CsSel,
+    /// Clock Selection
+    #[bits(2)]
+    pub clk_sel: ClkSel,
+    #[bits(2)]
+    __: u8,
 }
 
 /// Clock Selection
@@ -66,17 +66,17 @@ pub enum AdcMode {
 }
 
 /// Prescale and OSR settings
-#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
-#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8))]
+#[cfg_attr(feature = "defmt", bitfield(u8, defmt=true))]
 pub struct Config1 {
-    /// Prescaler Value Selection for AMCLK
     #[bits(2)]
-    pub pre: Pre,
+    __: u8,
     /// Oversampling Ratio for Delta-Sigma A/D Conversion
     #[bits(4)]
     pub osr: Osr,
+    /// Prescaler Value Selection for AMCLK
     #[bits(2)]
-    __: u8,
+    pub pre: Pre,
 }
 
 /// Prescaler Value Selection for AMCLK
@@ -139,19 +139,19 @@ pub enum Osr {
 
 ///  ADC boost and gain settings, auto-zeroing settings for analog
 /// multiplexer, voltage reference and ADC
-#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
-#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8))]
+#[cfg_attr(feature = "defmt", bitfield(u8, defmt=true))]
 pub struct Config2 {
-    /// ADC Bias Current Selection
     #[bits(2)]
-    pub boost: Boost,
+    __: u8,
+    /// Auto-Zeroing MUX Setting
+    pub az_mux: bool,
     /// ADC Gain Selection
     #[bits(3)]
     pub gain: Gain,
-    /// Auto-Zeroing MUX Setting
-    pub az_mux: bool,
+    /// ADC Bias Current Selection
     #[bits(2)]
-    __: u8,
+    pub boost: Boost,
 }
 
 /// ADC Bias Current Selection
@@ -214,24 +214,24 @@ impl Gain {
 
 /// Conversion mode, data and CRC format settings; enable for CRC on
 /// communications, enable for digital offset and gain error calibrations
-#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
-#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8))]
+#[cfg_attr(feature = "defmt", bitfield(u8, defmt=true))]
 pub struct Config3 {
-    /// Conversion Mode Selection
-    #[bits(2)]
-    pub conv_mode: ConvMode,
-    /// ADC Output Data Format Selection
-    #[bits(2)]
-    pub data_format: DataFormat,
+    /// Enable Digital Gain Calibration (default = false)
+    pub en_gaincal: bool,
+    /// Enable Digital Offset Calibration (default = false)
+    pub en_offcal: bool,
+    /// CRC Checksum Selection on Read Communications (default = false)
+    pub en_crccom: bool,
     /// CRC Checksum Format Selection on Read Communications
     #[bits(1)]
     pub crc_format: CrcFormat,
-    /// CRC Checksum Selection on Read Communications (default = false)
-    pub en_crccom: bool,
-    /// Enable Digital Offset Calibration (default = false)
-    pub en_offcal: bool,
-    /// Enable Digital Gain Calibration (default = false)
-    pub en_gaincal: bool,
+    /// ADC Output Data Format Selection
+    #[bits(2)]
+    pub data_format: DataFormat,
+    /// Conversion Mode Selection
+    #[bits(2)]
+    pub conv_mode: ConvMode,
 }
 
 /// CRC Checksum Format Selection on Read Communications
@@ -287,44 +287,44 @@ pub enum DataFormat {
 
 /// IRQ Status bits and IRQ mode settings; enable for Fast commands and
 /// for conversion start pulse
-#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
-#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8))]
+#[cfg_attr(feature = "defmt", bitfield(u8, defmt=true))]
 pub struct Irq {
-    #[bits(1)]
-    __: u8,
-    #[bits(access = RO)]
-    /// Data Ready Status Flag
-    pub dr_status: bool,
-    #[bits(access = RO)]
-    /// CRC Error Status Flag for Configuration Registers
-    pub crccfg_status: bool,
-    #[bits(access = RO)]
-    /// Power-On Reset Status Flag
-    pub por_status: bool,
-    /// IRQ/MDAT Selection
-    /// true: MDAT output is selected. Only POR and CRC interrupts can be present on this pin and take priority over the MDAT output.
-    /// false: IRQ output is selected. All interrupts can appear on the IRQ/MDAT pin. (default)
-    pub mdat: bool,
+    /// Enable Conversion Start Interrupt Output
+    pub en_stp: bool,
+    /// Enable Fast Commands
+    pub en_fastcmd: bool,
     /// IRQ Pin Inactive State Selection
     /// true: The Inactive state is logic high (does not require a pull-up resistor to DVDD)
     /// false: The Inactive state is high-Z (requires a pull-up resistor to DVDD) (default)
     pub push_pull: bool,
-    /// Enable Fast Commands
-    pub en_fastcmd: bool,
-    /// Enable Conversion Start Interrupt Output
-    pub en_stp: bool,
+    /// IRQ/MDAT Selection
+    /// true: MDAT output is selected. Only POR and CRC interrupts can be present on this pin and take priority over the MDAT output.
+    /// false: IRQ output is selected. All interrupts can appear on the IRQ/MDAT pin. (default)
+    pub mdat: bool,
+    #[bits(access = RO)]
+    /// Power-On Reset Status Flag
+    pub por_status: bool,
+    #[bits(access = RO)]
+    /// CRC Error Status Flag for Configuration Registers
+    pub crccfg_status: bool,
+    #[bits(access = RO)]
+    /// Data Ready Status Flag
+    pub dr_status: bool,
+    #[bits(1)]
+    __: u8,
 }
 
 /// Analog multiplexer input selection (MUX mode only)
-#[cfg_attr(not(feature = "defmt"), bitfield(u8, order = Msb))]
-#[cfg_attr(feature = "defmt", bitfield(u8, order = Msb, defmt=true))]
+#[cfg_attr(not(feature = "defmt"), bitfield(u8))]
+#[cfg_attr(feature = "defmt", bitfield(u8, defmt=true))]
 pub struct Mux {
-    /// MUX_VIN+ Input Selection (default = CH1)
-    #[bits(4)]
-    pub vin_p: MuxInput,
     /// MUX_VIN- Input Selection (default = CH1)
     #[bits(4)]
     pub vin_n: MuxInput,
+    /// MUX_VIN+ Input Selection (default = CH1)
+    #[bits(4)]
+    pub vin_p: MuxInput,
 }
 
 /// MUX_VIN Input Selection
