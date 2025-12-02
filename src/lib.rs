@@ -4,6 +4,8 @@
 //! TODO add docs
 
 mod regs;
+
+use embedded_hal::spi::Operation;
 pub use regs::*;
 
 /// It's possible to order devices with other two-bit addresses, but this is the default one.
@@ -28,10 +30,10 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
     pub fn init(&mut self) -> Result<(), SPI::Error> {
         // use internal clock
         let config0 = Config0::new().with_clk_sel(ClkSel::InternalClock);
-        self.write_register_8bit(config0)?;
+        self.write_register(config0)?;
         // disable en_stp
         let irq = Irq::new().with_en_fastcmd(true);
-        self.write_register_8bit(irq)?;
+        self.write_register(irq)?;
         // be ready for conversions
         self.fast_command(FastCommand::Standby)?;
         Ok(())
@@ -76,25 +78,27 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
         Ok(i16::from_be_bytes([buf[1], buf[2]]))
     }
 
-    /// Write a 8bit wide register
-    #[inline(always)]
-    pub fn write_register_8bit(&mut self, reg: impl Into<Register8Bit>) -> Result<(), SPI::Error> {
-        self._write_register_8bit(reg.into())
-    }
-    fn _write_register_8bit(&mut self, reg: Register8Bit) -> Result<(), SPI::Error> {
-        let (addr, value) = reg.addr_value();
-        let mut buf = [addr.into_incremental_write(), value];
-        self.spi.transfer_in_place(&mut buf)?;
-        self.status_byte = StatusByte(buf[0]);
+    /// Write a register.
+    pub fn write_register<R: Register>(&mut self, reg: R) -> Result<(), SPI::Error> {
+        let mut first_byte = [R::ADDRESS.into_incremental_write()];
+        self.spi.transaction(&mut [
+            Operation::TransferInPlace(&mut first_byte),
+            Operation::Write(reg.bytes()),
+        ])?;
+        self.status_byte = StatusByte(first_byte[0]);
         Ok(())
     }
 
-    /// Read a 8bit wide register
-    pub fn read_register_8bit(&mut self, reg: RegisterAddress) -> Result<u8, SPI::Error> {
-        let mut buf = [reg.into_single_read(), 0x00];
-        self.spi.transfer_in_place(&mut buf)?;
-        self.status_byte = StatusByte(buf[0]);
-        Ok(buf[1])
+    /// Read a register.
+    pub fn read_register<R: Register>(&mut self) -> Result<R, SPI::Error> {
+        let mut first_byte = [R::ADDRESS.into_single_read()];
+        let mut buf = R::Bytes::default();
+        self.spi.transaction(&mut [
+            Operation::TransferInPlace(&mut first_byte),
+            Operation::Read(buf.as_mut()),
+        ])?;
+        self.status_byte = StatusByte(first_byte[0]);
+        Ok(R::new(buf))
     }
 }
 

@@ -501,51 +501,41 @@ pub enum Register8Bit {
     Mux(Mux) = RegisterAddress::MUX as u8,
 }
 
-impl Register8Bit {
-    pub(super) fn addr_value(self) -> (RegisterAddress, u8) {
-        match self {
-            Register8Bit::Config0(data) => (RegisterAddress::CONFIG0, data.value()),
-            Register8Bit::Config1(data) => (RegisterAddress::CONFIG1, data.value()),
-            Register8Bit::Config2(data) => (RegisterAddress::CONFIG2, data.value()),
-            Register8Bit::Config3(data) => (RegisterAddress::CONFIG3, data.value()),
-            Register8Bit::Irq(data) => (RegisterAddress::IRQ, data.value()),
-            Register8Bit::Mux(data) => (RegisterAddress::MUX, data.value()),
-        }
-    }
+/// Register
+pub trait Register {
+    /// Register address
+    const ADDRESS: RegisterAddress;
+    /// Backing storage for the register
+    type Bytes: Default + AsMut<[u8]>;
+    /// Register as bytes
+    fn bytes(&self) -> &[u8];
+    /// Register from bytes
+    fn new(bytes: Self::Bytes) -> Self;
 }
 macro_rules! impl_register {
-    (
-        $(
-            $ty:ty => $variant:ident
-        ),* $(,)?
-    ) => {
-        $(
-            impl From<$ty> for Register8Bit {
-                #[inline]
-                fn from(value: $ty) -> Self {
-                    Register8Bit::$variant(value)
-                }
+    ($type:ty, $address:expr, $bytes:ty) => {
+        impl Register for $type {
+            const ADDRESS: RegisterAddress = $address;
+            type Bytes = $bytes;
+
+            fn bytes(&self) -> &[u8] {
+                &self.bytes
             }
 
-            impl $ty {
-                /// Register value
-                #[inline]
-                pub fn value(self) -> u8 {
-                    self.bytes[0]
-                }
+            fn new(bytes: Self::Bytes) -> Self {
+                Self::from_bytes(bytes)
             }
-        )*
+        }
     };
 }
 
-impl_register!(
-    Config0 => Config0,
-    Config1 => Config1,
-    Config2 => Config2,
-    Config3 => Config3,
-    Irq     => Irq,
-    Mux     => Mux,
-);
+impl_register!(Config0, RegisterAddress::CONFIG0, [u8; 1]);
+impl_register!(Config1, RegisterAddress::CONFIG1, [u8; 1]);
+impl_register!(Config2, RegisterAddress::CONFIG2, [u8; 1]);
+impl_register!(Config3, RegisterAddress::CONFIG3, [u8; 1]);
+impl_register!(Irq, RegisterAddress::IRQ, [u8; 1]);
+impl_register!(Mux, RegisterAddress::MUX, [u8; 1]);
+impl_register!(Scan, RegisterAddress::SCAN, [u8; 3]);
 
 #[cfg(test)]
 mod tests {
@@ -554,7 +544,7 @@ mod tests {
     #[test]
     fn test_bit_order() {
         let mux = Mux::new().with_vin_n(MuxInput::Ch1);
-        assert_eq!(mux.value(), 0b0000_0001);
+        assert_eq!(mux.bytes, [0b0000_0001]);
 
         let scan = Scan::new().with_offset(true).with_dly(Dly::D8);
         assert_eq!(scan.bytes, [0b0010_0000, 0b1000_0000, 0b0000_0000]);
