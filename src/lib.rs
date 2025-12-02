@@ -108,7 +108,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
         Ok(value)
     }
 
-    #[cfg(not(feature = "__24_bit"))]
+    #[cfg(feature = "__16_bit")]
     /// Read a conversion result if [`DataFormat::Format16Default`] is configured
     pub fn read_16_bit_adc_data(&mut self) -> Result<i16, SPI::Error> {
         let mut buf = [RegisterAddress::ADCDATA.into_single_read(), 0x00, 0x00];
