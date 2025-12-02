@@ -543,32 +543,94 @@ pub enum Dly {
     D0 = 0b000,
 }
 
-/// Delay value for TIMER between SCAN cycles
-#[bitfield]
+/// Selection Bits for the Time Interval (TTIMER_SCAN)
+/// Between Two Consecutive SCAN Cycles CONV_MODE = 1
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Timer {
-    /// Selection Bits for the Time Interval (TTIMER_SCAN) Between Two Consecutive SCAN Cycles
-    pub timer: B24,
+    bytes: [u8; 3],
 }
 
-/// ADC digital offset calibration value
-#[bitfield]
+impl Timer {
+    /// Creates a new `[Timer]`
+    #[must_use]
+    pub const fn new(val: u32) -> Self {
+        let bytes = val.to_be_bytes();
+        Self {
+            bytes: [bytes[1], bytes[2], bytes[3]],
+        }
+    }
+
+    /// Returns the value of `timer`.
+    #[inline]
+    #[must_use]
+    pub fn timer(&self) -> u32 {
+        u32::from_be_bytes([0, self.bytes[0], self.bytes[1], self.bytes[2]])
+    }
+
+    fn from_bytes(bytes: [u8; 3]) -> Self {
+        Self { bytes }
+    }
+}
+
+/// Offset Error Digital Calibration Code
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct OffsetCal {
-    /// Offset Error Digital Calibration Code (two’s complement, MSb first coding)
-    pub offsetcal: B24,
+    bytes: [u8; 3],
 }
 
-/// ADC digital gain calibration value
-#[bitfield]
+impl OffsetCal {
+    /// Creates a new `[OffsetCal]`
+    #[must_use]
+    pub const fn new(val: i32) -> Self {
+        let bytes = val.to_be_bytes();
+        Self {
+            bytes: [bytes[1], bytes[2], bytes[3]],
+        }
+    }
+
+    /// Returns the value of `offsetcal`.
+    #[inline]
+    #[must_use]
+    pub fn offsetcal(&self) -> i32 {
+        let msb = if self.bytes[0] & 0x80 != 0 { 0xFF } else { 0 };
+        i32::from_be_bytes([msb, self.bytes[0], self.bytes[1], self.bytes[2]])
+    }
+
+    fn from_bytes(bytes: [u8; 3]) -> Self {
+        Self { bytes }
+    }
+}
+
+/// Gain Error Digital Calibration Code
+/// The GAINCAL default value is 0x800000, which provides a gain of 1x.
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct GainCal {
-    /// Gain Error Digital Calibration Code (unsigned, MSb first coding)
-    /// The GAINCAL default value is 800000, which provides a gain of 1x.
-    pub gaincal: B24,
+    bytes: [u8; 3],
+}
+
+impl GainCal {
+    /// Creates a new `[GainCal]`
+    #[must_use]
+    pub const fn new(val: u32) -> Self {
+        let bytes = val.to_be_bytes();
+        Self {
+            bytes: [bytes[1], bytes[2], bytes[3]],
+        }
+    }
+
+    /// Returns the value of `gaincal`.
+    #[inline]
+    #[must_use]
+    pub fn gaincal(&self) -> u32 {
+        u32::from_be_bytes([0, self.bytes[0], self.bytes[1], self.bytes[2]])
+    }
+
+    fn from_bytes(bytes: [u8; 3]) -> Self {
+        Self { bytes }
+    }
 }
 
 /// Password value for SPI Write mode locking
@@ -581,16 +643,6 @@ pub enum Lock {
     /// Write access is not allowed on the full register map. Only the LOCK register
     /// is writable. CRC on register map is calculated continuously only when DMCLK is running.
     Locked = 0xA5,
-}
-
-/// CRC checksum for device configuration
-#[bitfield]
-#[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct CrcCfg {
-    /// CRC-16 checksum is continuously calculated internally based on the register map configuration
-    /// settings when the device is locked (LOCK ≠ 0xA5).
-    pub crccfg: u16,
 }
 
 /// Register
@@ -657,19 +709,6 @@ impl Register for Lock {
     }
 }
 
-impl Register for CrcCfg {
-    const ADDRESS: RegisterAddress = RegisterAddress::CRCCFG;
-    type Bytes = [u8; 2];
-
-    fn bytes(&self) -> &[u8] {
-        &self.bytes
-    }
-
-    fn new(bytes: Self::Bytes) -> Self {
-        Self::from_bytes(bytes)
-    }
-}
-
 /// ```should_panic
 /// use crate::mcp3x6x::*;
 /// fn f(reg: impl WriteableRegister) {}
@@ -695,5 +734,16 @@ mod tests {
 
         let scan = Scan::new().with_offset(true).with_dly(Dly::D8);
         assert_eq!(scan.bytes, [0b0010_0000, 0b1000_0000, 0b0000_0000]);
+
+        let timer = Timer::new(1);
+        assert_eq!(timer.bytes, [0b0000_0000, 0b0000_0000, 0b0000_0001]);
+        assert_eq!(timer.timer(), 1);
+
+        let offset_cal = OffsetCal::new(1);
+        assert_eq!(offset_cal.bytes, [0b0000_0000, 0b0000_0000, 0b0000_0001]);
+        assert_eq!(offset_cal.offsetcal(), 1);
+        let offset_cal = OffsetCal::new(-1);
+        assert_eq!(offset_cal.bytes, [0b1111_1111, 0b1111_1111, 0b1111_1111]);
+        assert_eq!(offset_cal.offsetcal(), -1);
     }
 }
