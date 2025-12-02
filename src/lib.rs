@@ -140,10 +140,12 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
     }
 }
 
+#[cfg(feature = "__24_bit")]
 /// Helper struct for convertion an adc reading to a voltage.
 #[derive(Copy, Clone, Debug)]
 pub struct ToVoltageConverter24bit(f32);
 
+#[cfg(feature = "__24_bit")]
 impl ToVoltageConverter24bit {
     /// Call this in `const`
     // Implements EQUATION 5-5 from the datasheet
@@ -158,10 +160,12 @@ impl ToVoltageConverter24bit {
     }
 }
 
+#[cfg(feature = "__16_bit")]
 /// Helper struct for convertion an adc reading to a voltage.
 #[derive(Copy, Clone, Debug)]
 pub struct ToVoltageConverter16bit(f32);
 
+#[cfg(feature = "__16_bit")]
 impl ToVoltageConverter16bit {
     /// Call this in `const`
     // Implements EQUATION 5-5 from the datasheet
