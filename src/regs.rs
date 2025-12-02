@@ -1,6 +1,7 @@
 use crate::RegisterAddress;
 use modular_bitfield::prelude::*;
 
+#[cfg(not(feature = "__has_voltage_reference"))]
 /// ADC Operating mode, Master Clock mode and Input Bias Current Source mode
 #[bitfield]
 #[derive(Copy, Clone, Debug)]
@@ -14,6 +15,24 @@ pub struct Config0 {
     pub clk_sel: ClkSel,
     #[skip]
     __: B2,
+}
+
+#[cfg(feature = "__has_voltage_reference")]
+/// ADC Operating mode, Master Clock mode and Input Bias Current Source mode
+#[bitfield]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct Config0 {
+    /// ADC Operating Mode Selection
+    pub adc_mode: AdcMode,
+    /// Current Source/Sink Selection Bits for Sensor Bias (source on VIN+/sink on VIN-)
+    pub cs_sel: CsSel,
+    /// Clock Selection
+    pub clk_sel: ClkSel,
+    #[skip]
+    __: B1,
+    /// Internal Voltage Reference Bit
+    vref_sel: bool,
 }
 
 /// Clock Selection
@@ -124,6 +143,7 @@ pub enum Osr {
     Osr32 = 0b0000,
 }
 
+#[cfg(not(feature = "__has_voltage_reference"))]
 ///  ADC boost and gain settings, auto-zeroing settings for analog
 /// multiplexer, voltage reference and ADC
 #[bitfield]
@@ -132,6 +152,25 @@ pub enum Osr {
 pub struct Config2 {
     #[skip]
     __: B2,
+    /// Auto-Zeroing MUX Setting
+    pub az_mux: bool,
+    /// ADC Gain Selection
+    pub gain: Gain,
+    /// ADC Bias Current Selection
+    pub boost: Boost,
+}
+
+#[cfg(feature = "__has_voltage_reference")]
+///  ADC boost and gain settings, auto-zeroing settings for analog
+/// multiplexer, voltage reference and ADC
+#[bitfield]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct Config2 {
+    #[skip]
+    __: B1,
+    /// Auto-Zeroing Reference Buffer Setting
+    pub az_ref: bool,
     /// Auto-Zeroing MUX Setting
     pub az_mux: bool,
     /// ADC Gain Selection

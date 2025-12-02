@@ -28,8 +28,8 @@ jobs:
       - name: Run clippy
         run: cargo clippy
 
-      - name: Run clippy with mcp3562 feature
-        run: cargo clippy --features mcp3562
+      - name: Run clippy with mcp3562r feature
+        run: cargo clippy --features mcp3562r
 
       - name: Run clippy with all features
         run: cargo clippy --all-features

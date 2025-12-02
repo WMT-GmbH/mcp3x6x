@@ -10,13 +10,20 @@ defmt = { version = "1.0.1", optional = true }
 
 [features]
 defmt = ["dep:defmt"]
-mcp3461 = []
-mcp3462 = ["__has_ch2_ch3"]
-mcp3464 = ["__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
+mcp3461 = ["__has_voltage_reference"]
+mcp3462 = ["__has_voltage_reference", "__has_ch2_ch3"]
+mcp3464 = ["__has_voltage_reference", "__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
+mcp3461r = []
+mcp3462r = ["__has_ch2_ch3"]
+mcp3464r = ["__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
 mcp3561 = []
 mcp3562 = ["__has_ch2_ch3"]
 mcp3564 = ["__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
+mcp3561r = ["__has_voltage_reference"]
+mcp3562r = ["__has_voltage_reference", "__has_ch2_ch3"]
+mcp3564r = ["__has_voltage_reference", "__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
 
 # internal features:
 __has_ch2_ch3 = []
 __has_ch4_ch5_ch6_ch7 = []
+__has_voltage_reference = []

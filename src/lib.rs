@@ -11,7 +11,7 @@ pub use regs::*;
 /// It's possible to order devices with other two-bit addresses, but this is the default one.
 const SPI_DEVICE_ADDRESS: u8 = 0x01 << 6;
 
-/// 16bit MCP3461/MCP3462/MCP3464/ or 24bit MCP3561/MCP3562/MCP3564/ Analog Digital Converter
+/// 16bit MCP3461(R)/MCP3462(R)/MCP3464(R)/ or 24bit MCP3561(R)/MCP3562(R)/MCP3564(R)/ Analog Digital Converter
 pub struct MCP3x6x<SPI> {
     spi: SPI,
     status_byte: StatusByte,
