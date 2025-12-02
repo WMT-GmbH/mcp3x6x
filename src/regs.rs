@@ -32,7 +32,7 @@ pub struct Config0 {
     #[skip]
     __: B1,
     /// Internal Voltage Reference Bit
-    vref_sel: bool,
+    pub vref_sel: bool,
 }
 
 /// Clock Selection
