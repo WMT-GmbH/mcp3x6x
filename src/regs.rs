@@ -672,7 +672,7 @@ impl Register for CrcCfg {
 
 /// ```should_panic
 /// use crate::mcp3x6x::*;
-/// fn f(reg: impl WriteableRegister){}
+/// fn f(reg: impl WriteableRegister) {}
 /// let reg: Mux = unimplemented!();
 /// f(reg);
 /// ```

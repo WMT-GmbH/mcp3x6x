@@ -23,7 +23,7 @@
 //!
 //! # Basic usage:
 //! ```
-//! use mcp3x6x::{FastCommand, MCP3x6x, ToVoltageConverter24bit, Irq, ClkSel, Config0};
+//! use mcp3x6x::{ClkSel, Config0, FastCommand, Irq, MCP3x6x, ToVoltageConverter24bit};
 //!
 //! // use 3.3V as Vref+ and 0V as Vref-
 //! const TO_VOLT: ToVoltageConverter24bit = ToVoltageConverter24bit::new(3.3, 0.0, mcp3x6x::Gain::X1);
@@ -47,10 +47,10 @@
 //! adc.fast_command(FastCommand::Standby).unwrap();
 //!
 //! loop {
-//! 	adc.fast_command(FastCommand::ConversionStart);
+//!     adc.fast_command(FastCommand::ConversionStart);
 //!     while irq_pin.is_high() {}
 //!     let sample = adc.read_24_bit_adc_data().unwrap();
-//! 	let voltage = TO_VOLT.to_volt(sample);
+//!     let voltage = TO_VOLT.to_volt(sample);
 //!     # break
 //! }
 
