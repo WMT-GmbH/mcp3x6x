@@ -1,7 +1,58 @@
 #![no_std]
 #![warn(missing_docs)]
 
-//! TODO add docs
+//! `no_std` library for the MCP3x6x(R) family of analog digital converters.
+//!
+//! Supports:
+//! * MCP3461
+//! * MCP3462
+//! * MCP3464
+//! * MCP3561
+//! * MCP3562
+//! * MCP3564
+//! * MCP3461R
+//! * MCP3462R
+//! * MCP3464R
+//! * MCP3561R
+//! * MCP3562R
+//! * MCP3564R
+//!
+//! # Features:
+//! * Activate one of the device features to enable support for the corresponding device.
+//! * `defmt` feature implements [`defmt::Format`] for all registers.
+//!
+//! # Basic usage:
+//! ```
+//! use mcp3x6x::{FastCommand, MCP3x6x, ToVoltageConverter24bit, Irq, ClkSel, Config0};
+//!
+//! // use 3.3V as Vref+ and 0V as Vref-
+//! const TO_VOLT: ToVoltageConverter24bit = ToVoltageConverter24bit::new(3.3, 0.0, mcp3x6x::Gain::X1);
+//!
+//! # let spi = mcp3x6x::doctesthelper::NoOpSPI;
+//! # let irq_pin = mcp3x6x::doctesthelper::MockInput;
+//! // spi is a struct implementing embedded_hal::spi::SpiDevice.
+//! // irq is an input pin attached to the IRQ pin of the ADC.
+//!
+//! let mut adc = MCP3x6x::new(spi);
+//!
+//! // use internal clock
+//! let config0 = Config0::new().with_clk_sel(ClkSel::InternalClock);
+//! adc.write_register(config0).unwrap();
+//!
+//! // disable en_stp
+//! let irq = Irq::new().with_en_fastcmd(true);
+//! adc.write_register(irq).unwrap();
+//!
+//! // be ready for conversions
+//! adc.fast_command(FastCommand::Standby).unwrap();
+//!
+//! loop {
+//! 	adc.fast_command(FastCommand::ConversionStart);
+//!     while irq_pin.is_high() {}
+//!     let sample = adc.read_24_bit_adc_data().unwrap();
+//! 	let voltage = TO_VOLT.to_volt(sample);
+//!     # break
+//! }
 
 mod regs;
 
@@ -11,7 +62,7 @@ pub use regs::*;
 /// It's possible to order devices with other two-bit addresses, but this is the default one.
 const SPI_DEVICE_ADDRESS: u8 = 0x01 << 6;
 
-/// 16bit MCP3461(R)/MCP3462(R)/MCP3464(R)/ or 24bit MCP3561(R)/MCP3562(R)/MCP3564(R)/ Analog Digital Converter
+/// MCP3x6x(R) Analog Digital Converter
 pub struct MCP3x6x<SPI> {
     spi: SPI,
     status_byte: StatusByte,
@@ -24,19 +75,6 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
             spi,
             status_byte: StatusByte(0),
         }
-    }
-
-    /// TODO add docs
-    pub fn init(&mut self) -> Result<(), SPI::Error> {
-        // use internal clock
-        let config0 = Config0::new().with_clk_sel(ClkSel::InternalClock);
-        self.write_register(config0)?;
-        // disable en_stp
-        let irq = Irq::new().with_en_fastcmd(true);
-        self.write_register(irq)?;
-        // be ready for conversions
-        self.fast_command(FastCommand::Standby)?;
-        Ok(())
     }
 
     /// Get the last received status byte.
@@ -53,7 +91,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
         Ok(self.status_byte)
     }
 
-    #[cfg(any(feature = "mcp3561", feature = "mcp3562", feature = "mcp3564"))]
+    #[cfg(feature = "__24_bit")]
     /// Read a conversion result if [`DataFormat::Format24Default`] is configured
     pub fn read_24_bit_adc_data(&mut self) -> Result<i32, SPI::Error> {
         let mut buf = [
@@ -70,7 +108,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
         Ok(value)
     }
 
-    #[cfg(any(feature = "mcp3461", feature = "mcp3462", feature = "mcp3464"))]
+    #[cfg(not(feature = "__24_bit"))]
     /// Read a conversion result if [`DataFormat::Format16Default`] is configured
     pub fn read_16_bit_adc_data(&mut self) -> Result<i16, SPI::Error> {
         let mut buf = [RegisterAddress::ADCDATA.into_single_read(), 0x00, 0x00];
@@ -141,15 +179,15 @@ impl ToVoltageConverter16bit {
 /// Fast command
 #[repr(u8)]
 pub enum FastCommand {
-    /// ADC Conversion Start/Restart Fast Command (overwrites ADC_MODE[1:0] = 11)
+    /// ADC Conversion Start/Restart Fast Command
     ConversionStart = 0b1010 << 2,
-    /// ADC Standby Mode Fast Command (overwrites ADC_MODE[1:0] = 10)
+    /// ADC Standby Mode Fast Command
     Standby = 0b1011 << 2,
-    /// ADC Shutdown Mode Fast Command (overwrites ADC_MODE[1:0] = 00)
+    /// ADC Shutdown Mode Fast Command
     Shutdown = 0b1100 << 2,
-    /// Full Shutdown Mode Fast Command (overwrites CONFIG0[7:0] = 0x00)
+    /// Full Shutdown Mode Fast Command
     FullShutdown = 0b1101 << 2,
-    /// Device Full Reset Fast Command (resets the entire register map to default value)
+    /// Device Full Reset Fast Command
     Reset = 0b1110 << 2,
 }
 
@@ -184,37 +222,35 @@ impl StatusByte {
 /// Available registers
 #[repr(u8)]
 pub enum RegisterAddress {
-    ///  4/24/32 R Latest A/D conversion data output value (24 or 32 bits depending on
-    /// DATA_FORMAT[1:0]) or modulator output stream (4-bit wide) in MDAT
-    /// Output mode
+    /// Latest A/D conversion data output value or modulator output stream in MDAT Output mode
     ADCDATA = 0x0 << 2,
-    ///  8 R/W ADC Operating mode, Master Clock mode and Input Bias Current
+    /// ADC Operating mode, Master Clock mode and Input Bias Current
     /// Source mode
     CONFIG0 = 0x1 << 2,
-    ///  8 R/W Prescale and OSR settings
+    /// Prescale and OSR settings
     CONFIG1 = 0x2 << 2,
-    /// 8 R/W ADC boost and gain settings, auto-zeroing settings for analog
+    /// ADC boost and gain settings, auto-zeroing settings for analog
     /// multiplexer, voltage reference and ADC
     CONFIG2 = 0x3 << 2,
-    ///  8 R/W Conversion mode, data and CRC format settings; enable for CRC on
+    /// Conversion mode, data and CRC format settings; enable for CRC on
     /// communications, enable for digital offset and gain error calibrations
     CONFIG3 = 0x4 << 2,
-    /// 8 R/W IRQ Status bits and IRQ mode settings; enable for Fast commands and
+    /// IRQ Status bits and IRQ mode settings; enable for Fast commands and
     /// for conversion start pulse
     IRQ = 0x5 << 2,
-    ///  8 R/W Analog multiplexer input selection (MUX mode only)
+    /// Analog multiplexer input selection (MUX mode only)
     MUX = 0x6 << 2,
-    ///  24 R/W SCAN mode settings
+    /// SCAN mode settings
     SCAN = 0x7 << 2,
-    ///  24 R/W Delay value for TIMER between SCAN cycles
+    /// Delay value for TIMER between SCAN cycles
     TIMER = 0x8 << 2,
-    ///  24 R/W ADC digital offset calibration value
+    /// ADC digital offset calibration value
     OFFSETCAL = 0x9 << 2,
-    ///  24 R/W ADC digital gain calibration value
+    /// ADC digital gain calibration value
     GAINCAL = 0xA << 2,
-    ///  8 R/W Password value for SPI Write mode locking
+    /// Password value for SPI Write mode locking
     LOCK = 0xD << 2,
-    ///  16 R CRC checksum for device configuration
+    /// CRC checksum for device configuration
     CRCCFG = 0xF << 2,
 }
 
@@ -232,3 +268,7 @@ impl RegisterAddress {
         SPI_DEVICE_ADDRESS | self as u8 | 0b10
     }
 }
+
+#[doc(hidden)]
+// FIXME: #[cfg(doctest)] once https://github.com/rust-lang/rust/issues/67295 is fixed.
+pub mod doctesthelper;

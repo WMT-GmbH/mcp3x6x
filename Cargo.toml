@@ -2,6 +2,19 @@
 name = "mcp3x6x"
 version = "0.1.0"
 edition = "2024"
+repository = "https://github.com/WMT-GmbH/mcp3x6x"
+license = "MIT OR Apache-2.0"
+categories = [
+    "hardware-support",
+    "no-std",
+    "embedded"
+]
+keywords = [
+    "embedded-hal",
+    "ADC",
+    "MCP346x",
+    "MCP356x",
+]
 
 [dependencies]
 modular-bitfield = "0.13.0"
@@ -10,20 +23,26 @@ defmt = { version = "1.0.1", optional = true }
 
 [features]
 defmt = ["dep:defmt"]
-mcp3461 = ["__has_voltage_reference"]
-mcp3462 = ["__has_voltage_reference", "__has_ch2_ch3"]
-mcp3464 = ["__has_voltage_reference", "__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
-mcp3461r = []
-mcp3462r = ["__has_ch2_ch3"]
-mcp3464r = ["__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
-mcp3561 = []
-mcp3562 = ["__has_ch2_ch3"]
-mcp3564 = ["__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
-mcp3561r = ["__has_voltage_reference"]
-mcp3562r = ["__has_voltage_reference", "__has_ch2_ch3"]
-mcp3564r = ["__has_voltage_reference", "__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
+
+mcp3461 = ["__16_bit"]
+mcp3462 = ["__16_bit", "__has_ch2_ch3"]
+mcp3464 = ["__16_bit", "__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
+mcp3561 = ["__24_bit"]
+mcp3562 = ["__24_bit", "__has_ch2_ch3"]
+mcp3564 = ["__24_bit", "__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
+mcp3461r = ["__16_bit", "__has_voltage_reference", ]
+mcp3462r = ["__16_bit", "__has_voltage_reference", "__has_ch2_ch3"]
+mcp3464r = ["__16_bit", "__has_voltage_reference", "__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
+mcp3561r = ["__24_bit", "__has_voltage_reference"]
+mcp3562r = ["__24_bit", "__has_voltage_reference", "__has_ch2_ch3"]
+mcp3564r = ["__24_bit", "__has_voltage_reference", "__has_ch2_ch3", "__has_ch4_ch5_ch6_ch7"]
 
 # internal features:
+__16_bit = []
+__24_bit = []
 __has_ch2_ch3 = []
 __has_ch4_ch5_ch6_ch7 = []
 __has_voltage_reference = []
+
+[package.metadata.docs.rs]
+all-features = true

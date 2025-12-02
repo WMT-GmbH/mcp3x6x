@@ -271,20 +271,21 @@ pub enum CrcFormat {
 pub enum ConvMode {
     /// Continuous Conversion mode or continuous conversion cycle in SCAN mode
     Continuous = 0b11,
-    /// One-shot conversion or one-shot cycle in SCAN mode. It sets ADC_MODE[1:0] to ‘10’ (standby) at
+    /// One-shot conversion or one-shot cycle in SCAN mode. It sets ADC_MODE to ‘10’ (standby) at
     /// the end of the conversion or at the end of the conversion cycle in SCAN mode.
     OneShotStandby = 0b10,
-    /// One-shot conversion or one-shot cycle in SCAN mode. It sets ADC_MODE[1:0] to ‘0x’ (ADC
+    /// One-shot conversion or one-shot cycle in SCAN mode. It sets ADC_MODE to ‘0x’ (ADC
     /// Shutdown) at the end of the conversion or at the end of the conversion cycle in SCAN mode (default).
     OneShotShutdown = 0b00,
 }
 
+#[cfg(feature = "__24_bit")]
 /// ADC Output Data Format Selection
 #[derive(Specifier, Copy, Clone, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[bits = 2]
 pub enum DataFormat {
-    /// 32-bit (25-bit right justified data + Channel ID): CHID[3:0] + SGN extension (4 bits) + 24-bit ADC
+    /// 32-bit (25-bit right justified data + Channel ID): CHID + SGN extension (4 bits) + 24-bit ADC
     /// data. It allows overrange with the SGN extension.
     Format32ChId = 0b11,
     ///  32-bit (25-bit right justified data): SGN extension (8-bit) + 24-bit ADC data. It allows overrange with
@@ -296,6 +297,26 @@ pub enum DataFormat {
     /// 24-bit (default ADC coding): 24-bit ADC data. It does not allow overrange (ADC code locked to
     /// 0xFFFFFF or 0x800000).
     Format24Default = 0b00,
+}
+
+#[cfg(not(feature = "__24_bit"))]
+/// ADC Output Data Format Selection
+#[derive(Specifier, Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[bits = 2]
+pub enum DataFormat {
+    /// 32-bit (17-bit right justified data + Channel ID): CHID + SGN extension (4 bits) + 16-bit ADC
+    /// data. It allows overrange with the SGN extension.
+    Format32ChId = 0b11,
+    ///  32-bit (17-bit right justified data): SGN extension (8-bit) + 16-bit ADC data. It allows overrange with
+    /// the SGN extension.
+    Format32SgnExt = 0b10,
+    /// 32-bit (16-bit left justified data): 16-bit ADC data + 0x00 (8-bit). It does not allow overrange (ADC
+    /// code locked to 0xFFFFFF or 0x800000).
+    Format32Left = 0b01,
+    /// 16-bit (default ADC coding): 16-bit ADC data. It does not allow overrange (ADC code locked to
+    /// 0xFFFFFF or 0x800000).
+    Format16Default = 0b00,
 }
 
 /// IRQ Status bits and IRQ mode settings; enable for Fast commands and
@@ -499,7 +520,7 @@ pub struct Scan {
     pub se_ch7: bool,
 }
 
-/// Delay Time Between Each Conversion During SCAN Cycle (DLY[2:0])
+/// Delay Time Between Each Conversion During SCAN Cycle
 #[derive(Specifier, Copy, Clone, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[bits = 3]
@@ -568,7 +589,7 @@ pub enum Lock {
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct CrcCfg {
     /// CRC-16 checksum is continuously calculated internally based on the register map configuration
-    /// settings when the device is locked (LOCK[7:0] ≠ 0xA5).
+    /// settings when the device is locked (LOCK ≠ 0xA5).
     pub crccfg: u16,
 }
 
