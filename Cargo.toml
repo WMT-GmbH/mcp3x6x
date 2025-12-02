@@ -1,5 +1,6 @@
 [package]
 name = "mcp3x6x"
+description = "no_std library for the MCP3x6x(R) family of analog digital converters"
 version = "0.1.0"
 edition = "2024"
 repository = "https://github.com/WMT-GmbH/mcp3x6x"
