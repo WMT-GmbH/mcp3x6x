@@ -79,7 +79,7 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
     }
 
     /// Write a register.
-    pub fn write_register<R: Register>(&mut self, reg: R) -> Result<(), SPI::Error> {
+    pub fn write_register<R: WriteableRegister>(&mut self, reg: R) -> Result<(), SPI::Error> {
         let mut first_byte = [R::ADDRESS.into_incremental_write()];
         self.spi.transaction(&mut [
             Operation::TransferInPlace(&mut first_byte),

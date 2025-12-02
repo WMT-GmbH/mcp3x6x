@@ -522,22 +522,54 @@ pub enum Dly {
     D0 = 0b000,
 }
 
-/// Internal Registers with 8 bits of data
+/// Delay value for TIMER between SCAN cycles
+#[bitfield]
 #[derive(Copy, Clone, Debug)]
-#[repr(u8)]
-pub enum Register8Bit {
-    /// [`Config0`]
-    Config0(Config0) = RegisterAddress::CONFIG0 as u8,
-    /// [`Config1`]
-    Config1(Config1) = RegisterAddress::CONFIG1 as u8,
-    /// [`Config2`]
-    Config2(Config2) = RegisterAddress::CONFIG2 as u8,
-    /// [`Config3`]
-    Config3(Config3) = RegisterAddress::CONFIG3 as u8,
-    /// [`Irq`]
-    Irq(Irq) = RegisterAddress::IRQ as u8,
-    /// [`Mux`]
-    Mux(Mux) = RegisterAddress::MUX as u8,
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct Timer {
+    /// Selection Bits for the Time Interval (TTIMER_SCAN) Between Two Consecutive SCAN Cycles
+    pub timer: B24,
+}
+
+/// ADC digital offset calibration value
+#[bitfield]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct OffsetCal {
+    /// Offset Error Digital Calibration Code (two’s complement, MSb first coding)
+    pub offsetcal: B24,
+}
+
+/// ADC digital gain calibration value
+#[bitfield]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct GainCal {
+    /// Gain Error Digital Calibration Code (unsigned, MSb first coding)
+    /// The GAINCAL default value is 800000, which provides a gain of 1x.
+    pub gaincal: B24,
+}
+
+/// Password value for SPI Write mode locking
+#[derive(Specifier, Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[bits = 8]
+pub enum Lock {
+    /// Write access is allowed on the full register map. CRC on register map values is not calculated
+    Unlocked = 0x00,
+    /// Write access is not allowed on the full register map. Only the LOCK register
+    /// is writable. CRC on register map is calculated continuously only when DMCLK is running.
+    Locked = 0xA5,
+}
+
+/// CRC checksum for device configuration
+#[bitfield]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct CrcCfg {
+    /// CRC-16 checksum is continuously calculated internally based on the register map configuration
+    /// settings when the device is locked (LOCK[7:0] ≠ 0xA5).
+    pub crccfg: u16,
 }
 
 /// Register
@@ -551,6 +583,10 @@ pub trait Register {
     /// Register from bytes
     fn new(bytes: Self::Bytes) -> Self;
 }
+
+/// Writeable Register
+pub trait WriteableRegister: Register {}
+
 macro_rules! impl_register {
     ($type:ty, $address:expr, $bytes:ty) => {
         impl Register for $type {
@@ -565,6 +601,8 @@ macro_rules! impl_register {
                 Self::from_bytes(bytes)
             }
         }
+
+        impl WriteableRegister for $type {}
     };
 }
 
@@ -575,6 +613,55 @@ impl_register!(Config3, RegisterAddress::CONFIG3, [u8; 1]);
 impl_register!(Irq, RegisterAddress::IRQ, [u8; 1]);
 impl_register!(Mux, RegisterAddress::MUX, [u8; 1]);
 impl_register!(Scan, RegisterAddress::SCAN, [u8; 3]);
+impl_register!(Timer, RegisterAddress::TIMER, [u8; 3]);
+impl_register!(OffsetCal, RegisterAddress::OFFSETCAL, [u8; 3]);
+impl_register!(GainCal, RegisterAddress::GAINCAL, [u8; 3]);
+
+impl Register for Lock {
+    const ADDRESS: RegisterAddress = RegisterAddress::LOCK;
+    type Bytes = [u8; 1];
+
+    fn bytes(&self) -> &[u8] {
+        match self {
+            Lock::Unlocked => &[0x00],
+            Lock::Locked => &[0xA5],
+        }
+    }
+
+    fn new(bytes: Self::Bytes) -> Self {
+        match bytes[0] {
+            0xA5 => Lock::Locked,
+            _ => Lock::Unlocked,
+        }
+    }
+}
+
+impl Register for CrcCfg {
+    const ADDRESS: RegisterAddress = RegisterAddress::CRCCFG;
+    type Bytes = [u8; 2];
+
+    fn bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    fn new(bytes: Self::Bytes) -> Self {
+        Self::from_bytes(bytes)
+    }
+}
+
+/// ```should_panic
+/// use crate::mcp3x6x::*;
+/// fn f(reg: impl WriteableRegister){}
+/// let reg: Mux = unimplemented!();
+/// f(reg);
+/// ```
+/// ```compile_fail
+/// use crate::mcp3x6x::*;
+/// fn f(reg: impl WriteableRegister){}
+/// let reg: CrcCfg = unimplemented!();
+/// f(reg);
+/// ```
+fn _test_read_only() {}
 
 #[cfg(test)]
 mod tests {
