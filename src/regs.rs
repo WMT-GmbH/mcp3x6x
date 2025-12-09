@@ -416,12 +416,8 @@ pub struct Scan {
     pub dly: Dly,
     /// Differential Channel A (CH0–CH1)
     pub diff_a: bool,
-    /// Differential Channel B (CH2–CH3)
-    pub diff_b: bool,
-    /// Differential Channel C (CH4–CH5)
-    pub diff_c: bool,
-    /// Differential Channel D (CH6–CH7)
-    pub diff_d: bool,
+    #[skip]
+    __: B3,
     /// Temperature Reading (TEMP)
     pub temp: bool,
     /// Analog Supply Voltage Reading (AVDD)
@@ -452,10 +448,8 @@ pub struct Scan {
     pub diff_a: bool,
     /// Differential Channel B (CH2–CH3)
     pub diff_b: bool,
-    /// Differential Channel C (CH4–CH5)
-    pub diff_c: bool,
-    /// Differential Channel D (CH6–CH7)
-    pub diff_d: bool,
+    #[skip]
+    __: B2,
     /// Temperature Reading (TEMP)
     pub temp: bool,
     /// Analog Supply Voltage Reading (AVDD)
