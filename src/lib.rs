@@ -13,9 +13,11 @@
 //! * MCP3461R
 //! * MCP3462R
 //! * MCP3464R
+//! * MCP3465R
 //! * MCP3561R
 //! * MCP3562R
 //! * MCP3564R
+//! * MCP3565R
 //!
 //! # Features:
 //! * Activate one of the device features to enable support for the corresponding device.
