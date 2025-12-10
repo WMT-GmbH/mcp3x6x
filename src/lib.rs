@@ -66,8 +66,11 @@ const SPI_DEVICE_ADDRESS: u8 = 0x01 << 6;
 
 /// MCP3x6x(R) Analog Digital Converter
 pub struct MCP3x6x<SPI> {
-    spi: SPI,
-    status_byte: StatusByte,
+    /// The SPI device
+    pub spi: SPI,
+    /// The last received status byte.
+    /// Invalid if no SPI communication happened yet.
+    pub status_byte: StatusByte,
 }
 
 impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
@@ -77,12 +80,6 @@ impl<SPI: embedded_hal::spi::SpiDevice> MCP3x6x<SPI> {
             spi,
             status_byte: StatusByte(0),
         }
-    }
-
-    /// Get the last received status byte.
-    /// Invalid if no SPI communication happened yet.
-    pub fn status_byte(&self) -> StatusByte {
-        self.status_byte
     }
 
     /// Send a [`FastCommand`]
