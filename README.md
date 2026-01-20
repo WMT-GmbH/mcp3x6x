@@ -42,11 +42,11 @@ const TO_VOLT: ToVoltageConverter24bit = ToVoltageConverter24bit::new(3.3, 0.0, 
 let mut adc = MCP3x6x::new(spi);
 
 // use internal clock
-let config0 = Config0::new().with_clk_sel(ClkSel::InternalClock);
+let config0 = Config0::default().with_clk_sel(ClkSel::InternalClock);
 adc.write_register(config0).unwrap();
 
 // disable en_stp
-let irq = Irq::new().with_en_fastcmd(true);
+let irq = Irq::default().with_en_stp(false);
 adc.write_register(irq).unwrap();
 
 // be ready for conversions
