@@ -35,6 +35,14 @@ pub struct Config0 {
     pub vref_sel: bool,
 }
 
+impl Default for Config0 {
+    fn default() -> Self {
+        Config0 {
+            bytes: [0b1100_0000],
+        }
+    }
+}
+
 /// Clock Selection
 #[derive(Specifier, Copy, Clone, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -87,6 +95,14 @@ pub struct Config1 {
     pub osr: Osr,
     /// Prescaler Value Selection for AMCLK
     pub pre: Pre,
+}
+
+impl Default for Config1 {
+    fn default() -> Self {
+        Config1 {
+            bytes: [0b0000_1100],
+        }
+    }
 }
 
 /// Prescaler Value Selection for AMCLK
@@ -179,6 +195,14 @@ pub struct Config2 {
     pub boost: Boost,
 }
 
+impl Default for Config2 {
+    fn default() -> Self {
+        Config2 {
+            bytes: [0b1000_1011],
+        }
+    }
+}
+
 /// ADC Bias Current Selection
 #[derive(Specifier, Copy, Clone, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -236,7 +260,7 @@ impl Gain {
 /// Conversion mode, data and CRC format settings; enable for CRC on
 /// communications, enable for digital offset and gain error calibrations
 #[bitfield]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Config3 {
     /// Enable Digital Gain Calibration (default = false)
@@ -350,6 +374,14 @@ pub struct Irq {
     __: B1,
 }
 
+impl Default for Irq {
+    fn default() -> Self {
+        Irq {
+            bytes: [0b0111_0011],
+        }
+    }
+}
+
 /// Analog multiplexer input selection (MUX mode only)
 #[bitfield]
 #[derive(Copy, Clone, Debug)]
@@ -359,6 +391,14 @@ pub struct Mux {
     pub vin_n: MuxInput,
     /// MUX_VIN+ Input Selection (default = CH1)
     pub vin_p: MuxInput,
+}
+
+impl Default for Mux {
+    fn default() -> Self {
+        Mux {
+            bytes: [0b0000_0001],
+        }
+    }
 }
 
 /// MUX_VIN Input Selection
@@ -407,7 +447,7 @@ pub enum MuxInput {
 /// SCAN mode settings
 #[cfg(not(feature = "__has_ch2_ch3"))]
 #[bitfield]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Scan {
     #[skip]
@@ -437,7 +477,7 @@ pub struct Scan {
 #[cfg(all(feature = "__has_ch2_ch3", not(feature = "__has_ch4_ch5_ch6_ch7")))]
 /// SCAN mode settings
 #[bitfield]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Scan {
     #[skip]
@@ -473,7 +513,7 @@ pub struct Scan {
 #[cfg(feature = "__has_ch4_ch5_ch6_ch7")]
 /// SCAN mode settings
 #[bitfield]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Scan {
     #[skip]
@@ -539,7 +579,7 @@ pub enum Dly {
 
 /// Selection Bits for the Time Interval (TTIMER_SCAN)
 /// Between Two Consecutive SCAN Cycles CONV_MODE = 1
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Timer {
     bytes: [u8; 3],
@@ -568,7 +608,7 @@ impl Timer {
 }
 
 /// Offset Error Digital Calibration Code
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct OffsetCal {
     bytes: [u8; 3],
@@ -599,7 +639,7 @@ impl OffsetCal {
 
 /// Gain Error Digital Calibration Code
 /// The GAINCAL default value is 0x800000, which provides a gain of 1x.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct GainCal {
     bytes: [u8; 3],
@@ -628,7 +668,7 @@ impl GainCal {
 }
 
 /// Password value for SPI Write mode locking
-#[derive(Specifier, Copy, Clone, Debug)]
+#[derive(Specifier, Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[bits = 8]
 pub enum Lock {
@@ -636,6 +676,7 @@ pub enum Lock {
     Unlocked = 0x00,
     /// Write access is not allowed on the full register map. Only the LOCK register
     /// is writable. CRC on register map is calculated continuously only when DMCLK is running.
+    #[default]
     Locked = 0xA5,
 }
 
